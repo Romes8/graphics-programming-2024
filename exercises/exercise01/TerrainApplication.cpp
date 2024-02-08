@@ -57,15 +57,17 @@ void TerrainApplication::Initialize()
     float scaleX = 1.0f / m_gridX;
     float scaleY = 1.0f / m_gridY;
 
+    float posX, posY, plusY, plusX;
+
     // (todo) 01.1: Create containers for the vertex position
     for (float x = 0.0f; x < m_gridX - 1; x = x + 1.0f) {
         for (float y = 0.0f; y < m_gridY - 1; y = y + 1.0f) {
 
-            float posX = x * scaleX - 0.5f;
-            float plusX = (x + 1) * scaleX - 0.5f;
+            posX = x * scaleX - 0.5f;
+            plusX = (x + 1) * scaleX - 0.5f;
 
-            float posY = y * scaleY - 0.5f;
-            float plusY = (y + 1) * scaleY - 0.5f;
+            posY = y * scaleY - 0.5f;
+            plusY = (y + 1) * scaleY - 0.5f;
 
             //first trinagle
             Positions.push_back({ posX,posY,0.0f });      //lower left
@@ -107,6 +109,7 @@ void TerrainApplication::Initialize()
     VertexAttribute position(Data::Type::Float, 3);
     vao.SetAttribute(0, position, 0);
 
+    //shows the white lines
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 
