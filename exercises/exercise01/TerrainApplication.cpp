@@ -3,7 +3,16 @@
 // (todo) 01.1: Include the libraries you need
 
 #include <cmath>
+#include <list>
+#include <vector>
 #include <iostream>
+
+#include <ituGL/geometry/VertexBufferObject.h>
+#include <ituGL/geometry/VertexArrayObject.h>
+#include <ituGL/geometry/VertexAttribute.h>
+#include <ituGL/geometry/ElementBufferObject.h>
+
+int vertexCount;
 
 // Helper structures. Declared here only for this exercise
 struct Vector2
@@ -15,7 +24,7 @@ struct Vector2
 
 struct Vector3
 {
-    Vector3() : Vector3(0.f,0.f,0.f) {}
+    Vector3() : Vector3(0.f, 0.f, 0.f) {}
     Vector3(float x, float y, float z) : x(x), y(y), z(z) {}
     float x, y, z;
 
@@ -37,13 +46,55 @@ TerrainApplication::TerrainApplication()
 
 void TerrainApplication::Initialize()
 {
+    //potentially move to initialize constructor
     Application::Initialize();
 
     // Build shaders and store in m_shaderProgram
     BuildShaders();
 
-    // (todo) 01.1: Create containers for the vertex position
+    std::list<std::vector<float>> Positions;
 
+    // (todo) 01.1: Create containers for the vertex position
+    for (float x = 0.0; x < m_gridX - 1; x = x + 1.0f) {
+        for (float y = 0.0; y < m_gridY - 1; y = y + 1.0f) {
+
+            //first trinagle
+            Positions.push_back({ x,y,0.0f });      //lower left
+            Positions.push_back({ x + 1.0f,y,0.0f });   //lower right
+            Positions.push_back({ x + 1.0f,y + 1.0f,0.0f }); //upper right
+
+            //second triangle
+            Positions.push_back({ x,y,0.0f });     //lower left
+            Positions.push_back({ x + 1.0f,y + 1.0f,0.0f }); //upper right
+            Positions.push_back({ x,y + 1.0f,0.0f });   //upper left
+        }
+    }
+
+    //print of values
+    for (const auto& vec : Positions) {
+        // Assuming each 'vec' is a vector with 3 elements for x, y, and z
+        if (vec.size() >= 3) {
+            std::cout << "(" << vec[0] << ", " << vec[1] << ", " << vec[2] << ")\n" << std::endl;
+        }
+    }
+
+
+    //flatten
+    std::vector<float> flatPositions;
+    for (const auto& vec : Positions) {
+        flatPositions.insert(flatPositions.end(), vec.begin(), vec.end());
+    }
+
+
+
+    vao.Bind();
+    vbo.Bind();
+
+    vbo.AllocateData<float>(flatPositions);
+    vertexCount = flatPositions.size() / 3;
+
+    VertexAttribute position(Data::Type::Float, 3);
+    vao.SetAttribute(0, position, 0);
 
     // (todo) 01.1: Fill in vertex data
 
@@ -55,6 +106,8 @@ void TerrainApplication::Initialize()
 
 
     // (todo) 01.1: Unbind VAO, and VBO
+
+
 
 
     // (todo) 01.5: Unbind EBO
@@ -79,6 +132,10 @@ void TerrainApplication::Render()
     glUseProgram(m_shaderProgram);
 
     // (todo) 01.1: Draw the grid
+
+    vao.Bind(); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
+    //glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+    glDrawArrays(GL_TRIANGLES, 0, vertexCount);
 
 }
 
