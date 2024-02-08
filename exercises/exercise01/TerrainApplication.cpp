@@ -54,21 +54,32 @@ void TerrainApplication::Initialize()
 
     std::list<std::vector<float>> Positions;
 
+    float scaleX = 1.0f / m_gridX;
+    float scaleY = 1.0f / m_gridY;
+
     // (todo) 01.1: Create containers for the vertex position
-    for (float x = 0.0; x < m_gridX - 1; x = x + 1.0f) {
-        for (float y = 0.0; y < m_gridY - 1; y = y + 1.0f) {
+    for (float x = 0.0f; x < m_gridX - 1; x = x + 1.0f) {
+        for (float y = 0.0f; y < m_gridY - 1; y = y + 1.0f) {
+
+            float posX = x * scaleX - 0.5f;
+            float plusX = (x + 1) * scaleX - 0.5f;
+
+            float posY = y * scaleY - 0.5f;
+            float plusY = (y + 1) * scaleY - 0.5f;
 
             //first trinagle
-            Positions.push_back({ x,y,0.0f });      //lower left
-            Positions.push_back({ x + 1.0f,y,0.0f });   //lower right
-            Positions.push_back({ x + 1.0f,y + 1.0f,0.0f }); //upper right
+            Positions.push_back({ posX,posY,0.0f });      //lower left
+            Positions.push_back({ plusX,posY,0.0f });   //lower right
+            Positions.push_back({ plusX , plusY ,0.0f }); //upper right
 
             //second triangle
-            Positions.push_back({ x,y,0.0f });     //lower left
-            Positions.push_back({ x + 1.0f,y + 1.0f,0.0f }); //upper right
-            Positions.push_back({ x,y + 1.0f,0.0f });   //upper left
+            Positions.push_back({ posX, posY,0.0f });     //lower left
+            Positions.push_back({ plusX, plusY ,0.0f }); //upper right
+            Positions.push_back({ posX , plusY ,0.0f });   //upper left
         }
     }
+
+
 
     //print of values
     for (const auto& vec : Positions) {
@@ -95,6 +106,9 @@ void TerrainApplication::Initialize()
 
     VertexAttribute position(Data::Type::Float, 3);
     vao.SetAttribute(0, position, 0);
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
 
     // (todo) 01.1: Fill in vertex data
 
@@ -133,8 +147,7 @@ void TerrainApplication::Render()
 
     // (todo) 01.1: Draw the grid
 
-    vao.Bind(); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
-    //glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+    vao.Bind(); 
     glDrawArrays(GL_TRIANGLES, 0, vertexCount);
 
 }
