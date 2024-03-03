@@ -46,6 +46,8 @@ private:
     std::shared_ptr<Material> m_defaultMaterial;
 
     // (todo) 04.X: Add additional materials
+    std::shared_ptr<Material> m_terrainMaterial00;
+
 
 
     std::shared_ptr<Texture2DObject> m_defaultTexture;
