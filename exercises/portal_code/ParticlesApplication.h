@@ -37,6 +37,9 @@ private:
     static float RandomRange(float from, float to);
     static glm::vec2 RandomDirection();
     static Color RandomColor();
+    GLuint LoadTexture(const char* filename);
+    void RenderBackground();
+
 
 private:
     // All particles stored in a single VBO with interleaved attributes
@@ -48,6 +51,10 @@ private:
     // Particles shader program
     ShaderProgram m_shaderProgram;
 
+    ShaderProgram m_backgroundShaderProgram;
+
+    GLuint m_backgroundTexture;
+        
     // Location of the "CurrentTime" uniform
     ShaderProgram::Location m_currentTimeUniform;
 

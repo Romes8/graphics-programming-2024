@@ -2,6 +2,7 @@
 
 #include <ituGL/shader/Shader.h>
 #include <ituGL/geometry/VertexAttribute.h>
+#include <stb_image.h>
 #include <cassert>
 #include <array>
 #include <fstream>
@@ -44,6 +45,9 @@ ParticlesApplication::ParticlesApplication()
 void ParticlesApplication::Initialize()
 {
     InitializeGeometry();
+
+    m_backgroundTexture = LoadTexture("Images/room-default.jpg");
+
 
     InitializeShaders();
 
@@ -95,6 +99,8 @@ void ParticlesApplication::Render()
 {
     // Clear background
     GetDevice().Clear(Color(0.0f, 0.0f, 0.0f));
+
+    RenderBackground();
 
     // Set our particles shader program
     m_shaderProgram.Use();
@@ -158,6 +164,24 @@ void ParticlesApplication::InitializeShaders()
     {
         std::cout << "Error linking shaders" << std::endl;
     }
+
+    // Load and compile background vertex shader
+    Shader backgroundVertexShader(Shader::VertexShader);
+    LoadAndCompileShader(backgroundVertexShader, "shaders/background.vert");
+
+    // Load and compile background fragment shader
+    Shader backgroundFragmentShader(Shader::FragmentShader);
+    LoadAndCompileShader(backgroundFragmentShader, "shaders/background.frag");
+
+    // Attach background shaders and link
+    if (!m_backgroundShaderProgram.Build(backgroundVertexShader, backgroundFragmentShader))
+    {
+        std::cout << "Error linking background shaders" << std::endl;
+    }
+
+    // Get uniform locations for particle shader
+    m_currentTimeUniform = m_shaderProgram.GetUniformLocation("CurrentTime");
+    m_gravityUniform = m_shaderProgram.GetUniformLocation("Gravity");
 }
 
 void ParticlesApplication::EmitParticle(const glm::vec2& position, float size, float duration, const Color& color, const glm::vec2& velocity)
@@ -261,4 +285,94 @@ Color ParticlesApplication::RandomColor()
 {
     std::cout << "------------" << std::endl;
     return Color(RandomR(), RandomG(), RandomB());
+}
+
+GLuint ParticlesApplication::LoadTexture(const char* filename)
+{
+
+    stbi_set_flip_vertically_on_load(true);
+
+    int width, height, nrChannels;
+    unsigned char* data = stbi_load(filename, &width, &height, &nrChannels, 0);
+    if (!data)
+    {
+        std::cerr << "Failed to load texture: " << filename << std::endl;
+        return 0;
+    }
+
+    GLuint textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+
+    if (nrChannels == 3)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    else if (nrChannels == 4)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    stbi_image_free(data);
+
+    return textureID;
+}
+
+void ParticlesApplication::RenderBackground()
+{
+    static const float quadVertices[] = {
+        // positions   // texCoords
+        -1.0f,  1.0f,  0.0f, 1.0f,
+        -1.0f, -1.0f,  0.0f, 0.0f,
+         1.0f, -1.0f,  1.0f, 0.0f,
+         1.0f,  1.0f,  1.0f, 1.0f,
+    };
+
+    static const unsigned int quadIndices[] = {
+        0, 1, 2,
+        2, 3, 0
+    };
+
+    static GLuint quadVAO = 0;
+    static GLuint quadVBO, quadEBO;
+
+    if (quadVAO == 0)
+    {
+        glGenVertexArrays(1, &quadVAO);
+        glGenBuffers(1, &quadVBO);
+        glGenBuffers(1, &quadEBO);
+
+        glBindVertexArray(quadVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quadEBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(quadIndices), quadIndices, GL_STATIC_DRAW);
+
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+
+        glBindVertexArray(0); // Unbind VAO
+    }
+
+    // Bind the texture
+    glBindTexture(GL_TEXTURE_2D, m_backgroundTexture);
+
+    // Use appropriate shader program for rendering the background
+    // Assuming you have a shader program for the background
+    m_backgroundShaderProgram.Use();
+
+    // Render the quad
+    glBindVertexArray(quadVAO);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
+
+    // Unbind the texture
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
