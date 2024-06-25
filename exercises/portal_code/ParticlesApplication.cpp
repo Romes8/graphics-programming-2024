@@ -8,6 +8,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <glm/trigonometric.hpp>
 
 // Structure defining that Particle data
 struct Particle
@@ -38,7 +39,7 @@ ParticlesApplication::ParticlesApplication()
     , m_gravityUniform(0)
     , m_mousePosition(0)
     , m_particleCount(0)
-    , m_particleCapacity(2048)  // You can change the capacity here to have more particles
+    , m_particleCapacity(4000)  // You can change the capacity here to have more particles
 {
 }
 
@@ -77,22 +78,61 @@ void ParticlesApplication::Update()
 
     const Window& window = GetMainWindow();
 
-    // Get the mouse position this frame
+    int width, height;
+    window.GetDimensions(width, height);
+
+    glm::vec2 center(0.0f, 0.0f);
+
+
+    int numParticles = 38; // Number of particles to spawn in the circle
+    float radius = 0.4f;   // Radius of the circle
+
+
+    //// Get the mouse position this frame
     glm::vec2 mousePosition = window.GetMousePosition(true);
 
-    // Emit particles while the left button is pressed
-    if (window.IsMouseButtonPressed(Window::MouseButton::Left))
+    ////// Emit particles while the left button is pressed
+    //if (window.IsMouseButtonPressed(Window::MouseButton::Left)) {
+
+    //    float size = RandomRange(10.0f, 30.0f);
+    //    float duration = RandomRange(1.0f, 2.0f);
+    //    Color color = RandomColor();
+    //    glm::vec2 velocity = 0.5f * (mousePosition - m_mousePosition) / GetDeltaTime();
+
+    //    EmitParticle(mousePosition, size, duration, color, velocity);
+
+    //    std::cout << "//////////" << std::endl;
+    //    std::cout << "Mouse position x: " << mousePosition.x << std::endl;
+    //    std::cout << "Mouse position y: " << mousePosition.y << std::endl;
+    //    std::cout << "//////////" << std::endl;
+
+    //}
+
+    ////// save the mouse position (to compare next frame and obtain velocity)
+    //m_mousePosition = mousePosition;
+
+    //spawning the particles in a circle
+    for (int i = 0; i < numParticles; ++i)
     {
+        float angle = glm::radians((360.0f / numParticles) * i);
+        glm::vec2 position = center + radius * glm::vec2(cos(angle), sin(angle));
         float size = RandomRange(10.0f, 30.0f);
         float duration = RandomRange(1.0f, 2.0f);
         Color color = RandomColor();
-        glm::vec2 velocity = 0.5f * (mousePosition - m_mousePosition) / GetDeltaTime();
+        glm::vec2 velocity = glm::vec2(cos(angle), sin(angle)) * RandomRange(0.1f, 0.5f);
 
-        EmitParticle(mousePosition, size, duration, color, velocity);
+       /* std::cout << "Particle : " << i << std::endl;
+        std::cout << "Position x: " << position.x << std::endl;
+        std::cout << "Position y: " << position.y << std::endl;*/
+
+        std::cout << "Veloxity x: " << velocity.x << std::endl;
+        std::cout << "Veloxity y: " << velocity.y << std::endl;
+
+
+
+        EmitParticle(position, size, duration, color, velocity);
     }
 
-    // save the mouse position (to compare next frame and obtain velocity)
-    m_mousePosition = mousePosition;
 }
 
 void ParticlesApplication::Render()
@@ -246,14 +286,14 @@ float ParticlesApplication::RandomR()
     //float num = (rand() % 20) / 20.0f;
     float num = 0.0f;
 
-    std::cout << "Red:" << num << std::endl;
+    //std::cout << "Red:" << num << std::endl;
     return num;
 }
 
 float ParticlesApplication::RandomG()
 {
     float num = (rand() % 128 + 128) / 255.0f;
-    std::cout << "Green:" << num << std::endl;
+   // std::cout << "Green:" << num << std::endl;
     return num;
 }
 
@@ -262,7 +302,7 @@ float ParticlesApplication::RandomB()
    // float num = (rand() % 20 / 20.0f);
     float num = 0.0f;
 
-    std::cout << "Blue:" << num << std::endl;
+   // std::cout << "Blue:" << num << std::endl;
     return num;
 }
 
