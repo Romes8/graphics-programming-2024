@@ -84,50 +84,35 @@ void ParticlesApplication::Update()
     glm::vec2 center(0.0f, 0.0f);
 
 
-    int numParticles = 38; // Number of particles to spawn in the circle
+
+    int numParticles = 40; // Number of particles to spawn in the circle
     float radius = 0.4f;   // Radius of the circle
+    float angularSpeed = glm::radians(120.0f); // Angular speed in radians per second
 
 
-    //// Get the mouse position this frame
-    glm::vec2 mousePosition = window.GetMousePosition(true);
-
-    ////// Emit particles while the left button is pressed
-    //if (window.IsMouseButtonPressed(Window::MouseButton::Left)) {
-
-    //    float size = RandomRange(10.0f, 30.0f);
-    //    float duration = RandomRange(1.0f, 2.0f);
-    //    Color color = RandomColor();
-    //    glm::vec2 velocity = 0.5f * (mousePosition - m_mousePosition) / GetDeltaTime();
-
-    //    EmitParticle(mousePosition, size, duration, color, velocity);
-
-    //    std::cout << "//////////" << std::endl;
-    //    std::cout << "Mouse position x: " << mousePosition.x << std::endl;
-    //    std::cout << "Mouse position y: " << mousePosition.y << std::endl;
-    //    std::cout << "//////////" << std::endl;
-
-    //}
-
-    ////// save the mouse position (to compare next frame and obtain velocity)
-    //m_mousePosition = mousePosition;
+    // Calculate angular speed for the motion effect
+    static float elapsedTime = 0.0f;
+    elapsedTime += GetDeltaTime(); // Increment elapsed time
+    float rotationAngle = angularSpeed * elapsedTime;
 
     //spawning the particles in a circle
     for (int i = 0; i < numParticles; ++i)
     {
-        float angle = glm::radians((360.0f / numParticles) * i);
+        float angle = glm::radians((360.0f / numParticles) * i) + rotationAngle;
         glm::vec2 position = center + radius * glm::vec2(cos(angle), sin(angle));
         float size = RandomRange(10.0f, 30.0f);
-        float duration = RandomRange(1.0f, 2.0f);
+        float duration = RandomRange(0.5f, 0.9f);
         Color color = RandomColor();
-        glm::vec2 velocity = glm::vec2(cos(angle), sin(angle)) * RandomRange(0.1f, 0.5f);
+        float velocityMagnitude = RandomRange(0.5f, 1.0f);
+        glm::vec2 velocityDirection = glm::vec2(std::cos(angle + glm::radians(90.0f)), std::sin(angle + glm::radians(90.0f)));
+        glm::vec2 velocity = velocityDirection * velocityMagnitude;
 
-       /* std::cout << "Particle : " << i << std::endl;
+        /* std::cout << "Particle : " << i << std::endl;
         std::cout << "Position x: " << position.x << std::endl;
         std::cout << "Position y: " << position.y << std::endl;*/
 
         std::cout << "Veloxity x: " << velocity.x << std::endl;
         std::cout << "Veloxity y: " << velocity.y << std::endl;
-
 
 
         EmitParticle(position, size, duration, color, velocity);
@@ -149,7 +134,7 @@ void ParticlesApplication::Render()
     m_shaderProgram.SetUniform(m_currentTimeUniform, GetCurrentTime());
 
     // Set Gravity uniform
-    m_shaderProgram.SetUniform(m_gravityUniform, -9.8f);
+    m_shaderProgram.SetUniform(m_gravityUniform, 0.0f);
 
     // Bind the particle system VAO
     m_vao.Bind();
