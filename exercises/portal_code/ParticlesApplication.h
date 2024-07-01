@@ -38,7 +38,10 @@ private:
     static glm::vec2 RandomDirection();
     static Color RandomColor();
     GLuint LoadTexture(const char* filename);
+    void RenderPortalBackground();
     void RenderBackground();
+    void StencilCircle();
+    void InitializeCircle();
 
 
 private:
@@ -52,8 +55,14 @@ private:
     ShaderProgram m_shaderProgram;
 
     ShaderProgram m_backgroundShaderProgram;
+    ShaderProgram m_PortalbackgroundShaderProgram;
+
+
+    ShaderProgram m_portalShader;
+    ShaderProgram portalShader;
 
     GLuint m_backgroundTexture;
+    GLuint m_PortalbackgroundTexture;
         
     // Location of the "CurrentTime" uniform
     ShaderProgram::Location m_currentTimeUniform;
