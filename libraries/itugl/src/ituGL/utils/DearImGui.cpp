@@ -4,6 +4,7 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include <iostream>
 
 DearImGui::DearImGui()
 {
@@ -37,6 +38,13 @@ void DearImGui::BeginFrame()
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+}
+
+void DearImGui::Button() {
+    if (ImGui::Button("Button 1"))
+    {
+        std::cout << "Pressed" << std::endl;
+    }
 }
 
 void DearImGui::EndFrame()

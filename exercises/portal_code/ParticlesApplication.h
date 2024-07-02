@@ -4,6 +4,8 @@
 #include <ituGL/geometry/VertexBufferObject.h>
 #include <ituGL/geometry/VertexArrayObject.h>
 #include <ituGL/shader/ShaderProgram.h>
+#include <ituGL/asset/TextureCubemapLoader.h>
+#include <ituGL/utils/DearImGui.h>
 
 class ParticlesApplication : public Application
 {
@@ -50,6 +52,8 @@ private:
 
     // VAO that represents the particle system
     VertexArrayObject m_vao;
+
+    DearImGui m_imgui;
 
     // Particles shader program
     ShaderProgram m_shaderProgram;

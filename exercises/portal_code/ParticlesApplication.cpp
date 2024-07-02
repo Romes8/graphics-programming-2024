@@ -3,6 +3,7 @@
 #include <ituGL/shader/Shader.h>
 #include <ituGL/geometry/VertexAttribute.h>
 #include <ituGL/asset/TextureCubemapLoader.h>
+#include <ituGL/utils/DearImGui.h>
 #include <stb_image.h>
 #include <cassert>
 #include <array>
@@ -81,6 +82,9 @@ void ParticlesApplication::Initialize()
 
     // Get "Gravity" uniform location in the shader program
     m_gravityUniform = m_shaderProgram.GetUniformLocation("Gravity");
+
+    m_imgui.Initialize(GetMainWindow());
+
 }
 
 void ParticlesApplication::Update()
@@ -120,8 +124,8 @@ void ParticlesApplication::Update()
         std::cout << "Position x: " << position.x << std::endl;
         std::cout << "Position y: " << position.y << std::endl;*/
 
-        std::cout << "Veloxity x: " << velocity.x << std::endl;
-        std::cout << "Veloxity y: " << velocity.y << std::endl;
+       // std::cout << "Veloxity x: " << velocity.x << std::endl;
+       // std::cout << "Veloxity y: " << velocity.y << std::endl;
 
 
         EmitParticle(position, size, duration, color, velocity);
@@ -175,6 +179,13 @@ void ParticlesApplication::Render()
     glDrawArrays(GL_POINTS, 0, std::min(m_particleCount, m_particleCapacity));
 
 
+    m_imgui.BeginFrame();
+
+    m_imgui.Button();
+
+    // End ImGui frame
+    m_imgui.EndFrame();
+ 
     Application::Render();
 }
 
@@ -345,7 +356,7 @@ glm::vec2 ParticlesApplication::RandomDirection()
 
 Color ParticlesApplication::RandomColor()
 {
-    std::cout << "------------" << std::endl;
+    //std::cout << "------------" << std::endl;
     return Color(RandomR(), RandomG(), RandomB());
 }
 

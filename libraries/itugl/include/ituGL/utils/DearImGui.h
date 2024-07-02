@@ -23,6 +23,7 @@ public:
 
     void Initialize(::Window& window);
     void Cleanup();
+    void Button();
 
     void BeginFrame();
     void EndFrame();
