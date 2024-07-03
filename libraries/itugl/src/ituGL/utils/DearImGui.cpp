@@ -5,6 +5,8 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <iostream>
+#include <string>
+
 
 DearImGui::DearImGui()
 {
@@ -40,11 +42,25 @@ void DearImGui::BeginFrame()
     ImGui::NewFrame();
 }
 
-void DearImGui::Button() {
-    if (ImGui::Button("Button 1"))
+std::string DearImGui::Button() {
+
+    //make default forest portal
+
+    if (ImGui::Button("Forest"))
     {
-        std::cout << "Pressed" << std::endl;
+        portal_type = "forest";
+        std::cout << "Forest chosen" << std::endl;
+       return portal_type;
     }
+     
+    if (ImGui::Button("Scary"))
+    {
+        portal_type = "scary";
+        std::cout << "Scary chosen" << std::endl;
+       return portal_type;
+    }
+  
+   return portal_type;
 }
 
 void DearImGui::EndFrame()

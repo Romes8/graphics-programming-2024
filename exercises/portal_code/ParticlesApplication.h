@@ -66,8 +66,12 @@ private:
     ShaderProgram portalShader;
 
     GLuint m_backgroundTexture;
-    GLuint m_PortalbackgroundTexture;
-        
+
+    // Portal backgrounds
+    GLuint m_forestbackgroundTexture;
+    GLuint m_scarybackgroundTexture;
+
+
     // Location of the "CurrentTime" uniform
     ShaderProgram::Location m_currentTimeUniform;
 

@@ -15,6 +15,7 @@
 #include <cmath>
 
 const float CIRCLE_RADIUS = 0.4f;
+std::string portal_type = "";
 
 // Structure defining that Particle data
 struct Particle
@@ -57,8 +58,9 @@ void ParticlesApplication::Initialize()
     // First background
     m_backgroundTexture = LoadTexture("Images/room-default.jpg"); 
 
-    // Portal background
-    m_PortalbackgroundTexture = LoadTexture("Images/portal.jpg"); 
+    // Portal backgrounds
+    m_forestbackgroundTexture = LoadTexture("Images/portal.jpg"); 
+    m_scarybackgroundTexture = LoadTexture("Images/scary.jpg");
 
 
 
@@ -181,7 +183,9 @@ void ParticlesApplication::Render()
 
     m_imgui.BeginFrame();
 
-    m_imgui.Button();
+    portal_type = m_imgui.Button();
+
+    std::cout << "Portal type: " << portal_type << std::endl;
 
     // End ImGui frame
     m_imgui.EndFrame();
@@ -450,6 +454,18 @@ void ParticlesApplication::RenderBackground()
 void ParticlesApplication::RenderPortalBackground()
 {
 
+    GLuint currentPortalBackground;
+
+    if (portal_type == "forest") {
+        currentPortalBackground = m_forestbackgroundTexture;
+    }
+    else if (portal_type == "scary") {
+        currentPortalBackground = m_scarybackgroundTexture;
+    }
+    else {
+        currentPortalBackground = m_forestbackgroundTexture; // Safe in case value is missing
+    }
+
     // Render smaller image to create a better looking portal image
     static const float quadVertices[] = {
         -0.8f,  0.8f,  0.0f, 1.0f, 
@@ -488,7 +504,7 @@ void ParticlesApplication::RenderPortalBackground()
         glBindVertexArray(0);
     }
 
-    glBindTexture(GL_TEXTURE_2D, m_PortalbackgroundTexture);
+    glBindTexture(GL_TEXTURE_2D, currentPortalBackground);
     m_PortalbackgroundShaderProgram.Use();
 
     glBindVertexArray(quadVAO);

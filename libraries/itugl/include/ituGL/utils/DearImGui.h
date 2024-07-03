@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+
+
 class Window;
 
 class DearImGui
@@ -23,10 +26,14 @@ public:
 
     void Initialize(::Window& window);
     void Cleanup();
-    void Button();
+    std::string Button();
 
     void BeginFrame();
     void EndFrame();
 
     Window UseWindow(const char* name);
+
+private:
+    std::string portal_type = "forest"; // Default value forest
+
 };
