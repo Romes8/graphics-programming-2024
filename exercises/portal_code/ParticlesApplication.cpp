@@ -17,7 +17,24 @@
 const float CIRCLE_RADIUS = 0.4f;
 std::string portal_type = "";
 
-// Structure defining that Particle data
+int width, height;
+glm::vec3 averageColor;
+
+
+// Color values for scenarios
+// Forest 
+glm::vec3 ForestCol;
+
+// Scary 
+glm::vec3 ScaryCol;
+
+// default room 
+glm::vec3 RoomCol;
+
+glm::vec3 CurrentCol; //Caries the colours of the current portal
+
+GLuint currentPortalBackground;
+
 struct Particle
 {
     glm::vec2 position;
@@ -28,7 +45,13 @@ struct Particle
     glm::vec2 velocity;
 };
 
-// List of attributes of the particle. Must match the structure above
+struct RGB
+{
+    float r;
+    float g;
+    float b;
+};
+
 const std::array<VertexAttribute, 6> s_vertexAttributes =
 {
     VertexAttribute(Data::Type::Float, 2), // position
@@ -46,7 +69,7 @@ ParticlesApplication::ParticlesApplication()
     , m_gravityUniform(0)
     , m_mousePosition(0)
     , m_particleCount(0)
-    , m_particleCapacity(4000)  // You can change the capacity here to have more particles
+    , m_particleCapacity(4000)
 {
 }
 
@@ -56,33 +79,32 @@ void ParticlesApplication::Initialize()
     InitializeGeometry();
 
     // First background
-    m_backgroundTexture = LoadTexture("Images/room-default.jpg"); 
+    m_backgroundTexture = LoadTexture("Images/room-default.jpg", RoomCol); 
 
     // Portal backgrounds
-    m_forestbackgroundTexture = LoadTexture("Images/portal.jpg"); 
-    m_scarybackgroundTexture = LoadTexture("Images/scary.jpg");
+    m_forestbackgroundTexture = LoadTexture("Images/portal.jpg", ForestCol); 
+    std::cout << "Forest Color: R=" << ForestCol.r << ", G=" << ForestCol.g << ", B=" << ForestCol.b << std::endl;
 
+    m_scarybackgroundTexture = LoadTexture("Images/scary.jpg", ScaryCol);
+    std::cout << "Scary Color: R=" << ScaryCol.r << ", G=" << ScaryCol.g << ", B=" << ScaryCol.b << std::endl;
+
+    // Set the default portal BG
+    currentPortalBackground = m_forestbackgroundTexture;
 
 
     InitializeShaders();
 
-    // Initialize the mouse position with the current position of the mouse
     m_mousePosition = GetMainWindow().GetMousePosition(true);
 
-    // Enable GL_PROGRAM_POINT_SIZE to have variable point size per-particle
     GetDevice().EnableFeature(GL_PROGRAM_POINT_SIZE);
 
-    // Enable GL_BLEND to have blending on the particles, and configure it as additive blending
     GetDevice().EnableFeature(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
-    // We need to enable V-sync, otherwise the framerate would be too high and spawn multiple particles in one click
     GetDevice().SetVSyncEnabled(true);
 
-    // Get "CurrentTime" uniform location in the shader program
     m_currentTimeUniform = m_shaderProgram.GetUniformLocation("CurrentTime");
 
-    // Get "Gravity" uniform location in the shader program
     m_gravityUniform = m_shaderProgram.GetUniformLocation("Gravity");
 
     m_imgui.Initialize(GetMainWindow());
@@ -100,17 +122,17 @@ void ParticlesApplication::Update()
 
     glm::vec2 center(0.0f, 0.0f);
 
-    int numParticles = 40; // Number of particles to spawn in the circle
+    int numParticles = 40; // Number of particle points to spawn in the circle
     float radius = CIRCLE_RADIUS;   // Radius of the circle
-    float angularSpeed = glm::radians(120.0f); // Angular speed in radians per second
+    float angularSpeed = glm::radians(120.0f); // Angular speed in radians
 
 
-    // Calculate angular speed for the motion effect
+    // Calculate angular speed
     static float elapsedTime = 0.0f;
-    elapsedTime += GetDeltaTime(); // Increment elapsed time
+    elapsedTime += GetDeltaTime();
     float rotationAngle = angularSpeed * elapsedTime;
 
-    //spawning the particles in a circle
+    // Spawning the particles in a circle
     for (int i = 0; i < numParticles; ++i)
     {
         float angle = glm::radians((360.0f / numParticles) * i) + rotationAngle;
@@ -122,17 +144,8 @@ void ParticlesApplication::Update()
         glm::vec2 velocityDirection = glm::vec2(std::cos(angle + glm::radians(90.0f)), std::sin(angle + glm::radians(90.0f)));
         glm::vec2 velocity = velocityDirection * velocityMagnitude;
 
-        /* std::cout << "Particle : " << i << std::endl;
-        std::cout << "Position x: " << position.x << std::endl;
-        std::cout << "Position y: " << position.y << std::endl;*/
-
-       // std::cout << "Veloxity x: " << velocity.x << std::endl;
-       // std::cout << "Veloxity y: " << velocity.y << std::endl;
-
-
         EmitParticle(position, size, duration, color, velocity);
     }
-
 }
 
 void ParticlesApplication::Render()
@@ -140,12 +153,10 @@ void ParticlesApplication::Render()
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    // Clear background
-    GetDevice().Clear(Color(0.0f, 0.0f, 0.0f));
 
     glEnable(GL_STENCIL_TEST); 
 
-    // Draw the stencil pattern
+    // Draw the stencil
     glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE); // Disable color  
     glDepthMask(GL_FALSE); // Disable depth  
 
@@ -168,7 +179,7 @@ void ParticlesApplication::Render()
 
     RenderBackground();
 
-    // Disable stencil test to draw particles on top of the images
+    // Disable stencil test to draw particles on top of the image
     glDisable(GL_STENCIL_TEST);
 
     
@@ -181,13 +192,9 @@ void ParticlesApplication::Render()
     glDrawArrays(GL_POINTS, 0, std::min(m_particleCount, m_particleCapacity));
 
 
+    // UI section
     m_imgui.BeginFrame();
-
     portal_type = m_imgui.Button();
-
-    std::cout << "Portal type: " << portal_type << std::endl;
-
-    // End ImGui frame
     m_imgui.EndFrame();
  
     Application::Render();
@@ -196,9 +203,7 @@ void ParticlesApplication::Render()
 void ParticlesApplication::InitializeGeometry()
 {
     m_vbo.Bind();
-
     m_vbo.AllocateData(m_particleCapacity * sizeof(Particle), BufferObject::Usage::DynamicDraw);
-
     m_vao.Bind();
 
     GLsizei stride = sizeof(Particle);
@@ -214,19 +219,15 @@ void ParticlesApplication::InitializeGeometry()
     VertexBufferObject::Unbind();
 }
 
-// Load, compile and Build shaders
 void ParticlesApplication::InitializeShaders()
 {
 
-    // Load and compile vertex shader
     Shader vertexShader(Shader::VertexShader);
     LoadAndCompileShader(vertexShader, "shaders/particles.vert");
 
-    // Load and compile fragment shader
     Shader fragmentShader(Shader::FragmentShader);
     LoadAndCompileShader(fragmentShader, "shaders/particles.frag");
 
-    // Attach shaders and link
     if (!m_shaderProgram.Build(vertexShader, fragmentShader))
     {
         std::cout << "Error linking shaders" << std::endl;
@@ -256,14 +257,12 @@ void ParticlesApplication::InitializeShaders()
         std::cout << "Error linking background shaders" << std::endl;
     }
 
-    // Get uniform locations for particle shader
     m_currentTimeUniform = m_shaderProgram.GetUniformLocation("CurrentTime");
     m_gravityUniform = m_shaderProgram.GetUniformLocation("Gravity");
 }
 
 void ParticlesApplication::EmitParticle(const glm::vec2& position, float size, float duration, const Color& color, const glm::vec2& velocity)
 {
-    // Initialize the particle
     Particle particle;
     particle.position = position;
     particle.size = size;
@@ -272,26 +271,19 @@ void ParticlesApplication::EmitParticle(const glm::vec2& position, float size, f
     particle.color = color;
     particle.velocity = velocity;
 
-    // Get the index in the circular buffer
     unsigned int particleIndex = m_particleCount % m_particleCapacity;
 
-    // Bind the VBO before updating data
     m_vbo.Bind();
-
-    // Update the particle data in the VBO
     int offset = particleIndex * sizeof(Particle);
     m_vbo.UpdateData(std::span(&particle, 1), offset);
 
-    // Unbind the VBO
     VertexBufferObject::Unbind();
 
-    // Increment the particle count
     m_particleCount++;
 }
 
 void ParticlesApplication::LoadAndCompileShader(Shader& shader, const char* path)
 {
-    // Open the file for reading
     std::ifstream file(path);
     if (!file.is_open())
     {
@@ -300,17 +292,13 @@ void ParticlesApplication::LoadAndCompileShader(Shader& shader, const char* path
         return;
     }
 
-    // Dump the contents into a string
     std::stringstream stringStream;
     stringStream << file.rdbuf() << '\0';
 
-    // Set the source code from the string
     shader.SetSource(stringStream.str().c_str());
 
-    // Try to compile
     if (!shader.Compile())
     {
-        // Get errors in case of failure
         std::array<char, 256> errors;
         shader.GetCompilationErrors(errors);
         std::cout << "Error compiling shader: " << path << std::endl;
@@ -318,29 +306,21 @@ void ParticlesApplication::LoadAndCompileShader(Shader& shader, const char* path
     }
 }
 
+// Colour section
+
 float ParticlesApplication::RandomR()
 {
-    //float num = (rand() % 20) / 20.0f;
-    float num = 0.0f;
-
-    //std::cout << "Red:" << num << std::endl;
-    return num;
+    return CurrentCol.r;
 }
 
 float ParticlesApplication::RandomG()
 {
-    float num = (rand() % 128 + 128) / 255.0f;
-   // std::cout << "Green:" << num << std::endl;
-    return num;
+    return CurrentCol.g;
 }
 
 float ParticlesApplication::RandomB()
 {
-   // float num = (rand() % 20 / 20.0f);
-    float num = 0.0f;
-
-   // std::cout << "Blue:" << num << std::endl;
-    return num;
+    return CurrentCol.b;
 }
 
 float ParticlesApplication::RandomNum()
@@ -360,22 +340,37 @@ glm::vec2 ParticlesApplication::RandomDirection()
 
 Color ParticlesApplication::RandomColor()
 {
-    //std::cout << "------------" << std::endl;
     return Color(RandomR(), RandomG(), RandomB());
 }
 
-GLuint ParticlesApplication::LoadTexture(const char* filename)
-{
 
+GLuint ParticlesApplication::LoadTexture(const char* filename, glm::vec3& SceneCol)
+{
     stbi_set_flip_vertically_on_load(true);
 
-    int width, height, nrChannels;
+    int nrChannels;
     unsigned char* data = stbi_load(filename, &width, &height, &nrChannels, 0);
     if (!data)
     {
         std::cerr << "Failed to load texture: " << filename << std::endl;
         return 0;
     }
+
+    // Calculate the colours
+    int pixelCount = width * height;
+    if (nrChannels == 3 || nrChannels == 4)
+    {
+        for (int i = 0; i < pixelCount; ++i)
+        {
+            SceneCol.r += static_cast<float>(data[i * nrChannels + 0]);
+            SceneCol.g += static_cast<float>(data[i * nrChannels + 1]);
+            SceneCol.b += static_cast<float>(data[i * nrChannels + 2]);
+        }
+
+        SceneCol /= static_cast<float>(pixelCount * 255.0f);
+    }
+
+    std::cout << "Average Color: R=" << SceneCol.r << ", G=" << SceneCol.g << ", B=" << SceneCol.b << std::endl;
 
     GLuint textureID;
     glGenTextures(1, &textureID);
@@ -394,9 +389,9 @@ GLuint ParticlesApplication::LoadTexture(const char* filename)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     stbi_image_free(data);
-
     return textureID;
 }
+
 
 void ParticlesApplication::RenderBackground()
 {
@@ -435,35 +430,37 @@ void ParticlesApplication::RenderBackground()
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 
-        glBindVertexArray(0); // Unbind VAO
+        glBindVertexArray(0); 
     }
 
     // Bind the texture
     glBindTexture(GL_TEXTURE_2D, m_backgroundTexture);
     m_backgroundShaderProgram.Use();
 
-    // Render the quad
     glBindVertexArray(quadVAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 
-    // Unbind the texture
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void ParticlesApplication::RenderPortalBackground()
 {
 
-    GLuint currentPortalBackground;
+    // Default value is Forest
+    GLuint last_value = currentPortalBackground;
 
     if (portal_type == "forest") {
         currentPortalBackground = m_forestbackgroundTexture;
+        CurrentCol = ForestCol;
     }
     else if (portal_type == "scary") {
         currentPortalBackground = m_scarybackgroundTexture;
+        CurrentCol = ScaryCol;
     }
     else {
         currentPortalBackground = m_forestbackgroundTexture; // Safe in case value is missing
+        CurrentCol = ForestCol;
     }
 
     // Render smaller image to create a better looking portal image
@@ -504,6 +501,7 @@ void ParticlesApplication::RenderPortalBackground()
         glBindVertexArray(0);
     }
 
+    // Portal change 
     glBindTexture(GL_TEXTURE_2D, currentPortalBackground);
     m_PortalbackgroundShaderProgram.Use();
 
@@ -514,13 +512,13 @@ void ParticlesApplication::RenderPortalBackground()
 }
 
 void ParticlesApplication::StencilCircle() {
-    const int num_segments = 100; // Number of segments to approximate the circle
-    const float radius = CIRCLE_RADIUS;    // Radius of the circle
-    const float centerX = 0.0f;   // X coordinate of the circle center
-    const float centerY = 0.0f;   // Y coordinate of the circle center
+    const int num_segments = 100; // Number of segments for circle
+    const float radius = CIRCLE_RADIUS; // Radius of the circle
+    const float centerX = 0.0f;   
+    const float centerY = 0.0f;
 
     std::vector<float> vertices;
-    vertices.push_back(centerX); // Center of the circle
+    vertices.push_back(centerX);
     vertices.push_back(centerY);
 
     for (int i = 0; i <= num_segments; ++i)

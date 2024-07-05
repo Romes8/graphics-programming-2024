@@ -6,6 +6,8 @@
 #include <ituGL/shader/ShaderProgram.h>
 #include <ituGL/asset/TextureCubemapLoader.h>
 #include <ituGL/utils/DearImGui.h>
+#include <vector>
+#include <glm/glm.hpp>
 
 class ParticlesApplication : public Application
 {
@@ -18,6 +20,7 @@ protected:
     void Render() override;
 
 private:
+
     // Initialize the VBO and VAO
     void InitializeGeometry();
 
@@ -39,11 +42,12 @@ private:
     static float RandomRange(float from, float to);
     static glm::vec2 RandomDirection();
     static Color RandomColor();
-    GLuint LoadTexture(const char* filename);
+    GLuint LoadTexture(const char* filename, glm::vec3& SceneCol);
     void RenderPortalBackground();
     void RenderBackground();
     void StencilCircle();
     void InitializeCircle();
+    glm::vec3 GetHighestMipmapColor(GLuint texture, int baseWidth, int baseHeight);
 
 
 private:
