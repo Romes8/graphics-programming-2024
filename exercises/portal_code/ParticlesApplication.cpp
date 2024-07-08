@@ -16,6 +16,7 @@
 
 const float CIRCLE_RADIUS = 0.4f;
 std::string portal_type = "";
+std::string bg_type = "";
 
 int width, height;
 glm::vec3 averageColor;
@@ -34,6 +35,10 @@ glm::vec3 RoomCol;
 glm::vec3 CurrentCol; //Caries the colours of the current portal
 
 GLuint currentPortalBackground;
+GLuint currentBackground;
+std::vector<glm::vec3> ColorPalette;
+
+
 
 struct Particle
 {
@@ -43,13 +48,6 @@ struct Particle
     float duration;
     Color color;
     glm::vec2 velocity;
-};
-
-struct RGB
-{
-    float r;
-    float g;
-    float b;
 };
 
 const std::array<VertexAttribute, 6> s_vertexAttributes =
@@ -79,18 +77,23 @@ void ParticlesApplication::Initialize()
     InitializeGeometry();
 
     // First background
-    m_backgroundTexture = LoadTexture("Images/room-default.jpg", RoomCol); 
+    m_backgroundTexture = LoadTexture("Images/room-default.jpg", RoomCol);
+    ColorPalette.push_back(RoomCol); // 0
 
     // Portal backgrounds
     m_forestbackgroundTexture = LoadTexture("Images/portal.jpg", ForestCol); 
-    std::cout << "Forest Color: R=" << ForestCol.r << ", G=" << ForestCol.g << ", B=" << ForestCol.b << std::endl;
+    //std::cout << "Forest Color: R=" << ForestCol.r << ", G=" << ForestCol.g << ", B=" << ForestCol.b << std::endl;
+    ColorPalette.push_back(ForestCol); // 1
 
     m_scarybackgroundTexture = LoadTexture("Images/scary.jpg", ScaryCol);
-    std::cout << "Scary Color: R=" << ScaryCol.r << ", G=" << ScaryCol.g << ", B=" << ScaryCol.b << std::endl;
+    //std::cout << "Scary Color: R=" << ScaryCol.r << ", G=" << ScaryCol.g << ", B=" << ScaryCol.b << std::endl;
+    ColorPalette.push_back(ScaryCol);  // 2
 
-    // Set the default portal BG
+
+    // Set the default BG and Portal BG
     currentPortalBackground = m_forestbackgroundTexture;
-
+    currentBackground = m_backgroundTexture;
+    CurrentCol = ForestCol;
 
     InitializeShaders();
 
@@ -194,7 +197,11 @@ void ParticlesApplication::Render()
 
     // UI section
     m_imgui.BeginFrame();
-    portal_type = m_imgui.Button();
+    portal_type = m_imgui.Portal(ColorPalette, CurrentCol);
+    bg_type = m_imgui.MainBG();
+    m_imgui.PortalCol(CurrentCol); // Colour change in the UI
+
+
     m_imgui.EndFrame();
  
     Application::Render();
@@ -395,6 +402,20 @@ GLuint ParticlesApplication::LoadTexture(const char* filename, glm::vec3& SceneC
 
 void ParticlesApplication::RenderBackground()
 {
+
+    // Default value is Forest
+    GLuint last_value = currentBackground;
+
+    if (bg_type == "room") {
+        currentBackground = m_backgroundTexture;
+    }
+    else if (bg_type == "") {
+        currentBackground = m_scarybackgroundTexture;
+    }
+    else {
+        currentBackground = m_forestbackgroundTexture; // Safe in case value is missing
+    }
+
     static const float quadVertices[] = {
         // positions   // texCoords
         -1.0f,  1.0f,  0.0f, 1.0f,
@@ -452,15 +473,15 @@ void ParticlesApplication::RenderPortalBackground()
 
     if (portal_type == "forest") {
         currentPortalBackground = m_forestbackgroundTexture;
-        CurrentCol = ForestCol;
+        //CurrentCol = ForestCol;
     }
     else if (portal_type == "scary") {
         currentPortalBackground = m_scarybackgroundTexture;
-        CurrentCol = ScaryCol;
+        //CurrentCol = ScaryCol;
     }
     else {
         currentPortalBackground = m_forestbackgroundTexture; // Safe in case value is missing
-        CurrentCol = ForestCol;
+        //CurrentCol = ForestCol;
     }
 
     // Render smaller image to create a better looking portal image

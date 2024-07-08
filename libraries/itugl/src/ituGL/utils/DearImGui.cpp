@@ -6,6 +6,11 @@
 #include <imgui_impl_opengl3.h>
 #include <iostream>
 #include <string>
+#include <glm/glm.hpp>
+#include <vector>
+
+int R, G, B;
+
 
 
 DearImGui::DearImGui()
@@ -42,14 +47,15 @@ void DearImGui::BeginFrame()
     ImGui::NewFrame();
 }
 
-std::string DearImGui::Button() {
-
-    //make default forest portal
+std::string DearImGui::Portal(std::vector<glm::vec3> ColPalette, glm::vec3& col) {
+    ImGui::Text("Choose a portal:");
 
     if (ImGui::Button("Forest"))
     {
         portal_type = "forest";
         std::cout << "Forest chosen" << std::endl;
+
+        col = ColPalette[1];
        return portal_type;
     }
      
@@ -57,10 +63,43 @@ std::string DearImGui::Button() {
     {
         portal_type = "scary";
         std::cout << "Scary chosen" << std::endl;
+        col = ColPalette[2];
        return portal_type;
     }
   
    return portal_type;
+}
+
+std::string DearImGui::MainBG() {
+    ImGui::Text("Choose a main Background:");
+
+    if (ImGui::Button("Room"))
+    {
+        bg_type = "forest";
+        std::cout << "Room chosen" << std::endl;
+        return bg_type;
+    }
+
+    return bg_type;
+}
+
+void DearImGui::PortalCol(glm::vec3& col) {
+    ImGui::Text("Choose a portal colour:");
+
+    R = col.r * 255;
+    G = col.g * 255;
+    B = col.b * 255;
+   
+    //ImGui::Text("Current RGB values: R=%.0f , G=%.0f , B=%.0f", R, G, B);
+
+    ImGui::SliderInt("Red", &R, 0, 255);
+    ImGui::SliderInt("Green", &G, 0, 255);
+    ImGui::SliderInt("Blue", &B, 0, 255);
+
+    col.r = R / 255.0f;
+    col.g = G / 255.0f;
+    col.b = B / 255.0f;
+
 }
 
 void DearImGui::EndFrame()
