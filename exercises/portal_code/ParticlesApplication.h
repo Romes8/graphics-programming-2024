@@ -69,11 +69,18 @@ private:
     ShaderProgram m_portalShader;
     ShaderProgram portalShader;
 
+    // Main backgrounds
     GLuint m_backgroundTexture;
+    GLuint m_neonHallbackgroundTexture;
+    GLuint m_scarybackgroundTexture;
+
 
     // Portal backgrounds
     GLuint m_forestbackgroundTexture;
-    GLuint m_scarybackgroundTexture;
+    GLuint m_italybackgroundTexture;
+    GLuint m_bathsbackgroundTexture;
+    GLuint m_brightNeonbackgroundTexture;
+
 
 
     // Location of the "CurrentTime" uniform

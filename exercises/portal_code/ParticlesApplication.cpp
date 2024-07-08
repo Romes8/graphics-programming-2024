@@ -32,6 +32,22 @@ glm::vec3 ScaryCol;
 // default room 
 glm::vec3 RoomCol;
 
+// Italy room 
+glm::vec3 ItalyCol;
+
+// Baths room 
+glm::vec3 BathsCol;
+
+// Neon hall room 
+glm::vec3 NeonHallCol;
+
+// Bright Neon hall room 
+glm::vec3 BrightNeonHallCol;
+
+// Hall room 
+glm::vec3 HallCol;
+
+
 glm::vec3 CurrentCol; //Caries the colours of the current portal
 
 GLuint currentPortalBackground;
@@ -80,14 +96,29 @@ void ParticlesApplication::Initialize()
     m_backgroundTexture = LoadTexture("Images/room-default.jpg", RoomCol);
     ColorPalette.push_back(RoomCol); // 0
 
+    m_neonHallbackgroundTexture = LoadTexture("Images/neon-hall.jpg", NeonHallCol);
+    //ColorPalette.push_back(NeonHallCol); // 0
+
+    m_scarybackgroundTexture = LoadTexture("Images/scary.jpg", ScaryCol);
+    //ColorPalette.push_back(NeonHallCol); // 0
+
+
     // Portal backgrounds
-    m_forestbackgroundTexture = LoadTexture("Images/portal.jpg", ForestCol); 
+    m_forestbackgroundTexture = LoadTexture("Images/forest.jpg", ForestCol); 
     //std::cout << "Forest Color: R=" << ForestCol.r << ", G=" << ForestCol.g << ", B=" << ForestCol.b << std::endl;
     ColorPalette.push_back(ForestCol); // 1
 
-    m_scarybackgroundTexture = LoadTexture("Images/scary.jpg", ScaryCol);
+    m_brightNeonbackgroundTexture = LoadTexture("Images/bright-neon.jpg", BrightNeonHallCol);
     //std::cout << "Scary Color: R=" << ScaryCol.r << ", G=" << ScaryCol.g << ", B=" << ScaryCol.b << std::endl;
-    ColorPalette.push_back(ScaryCol);  // 2
+    ColorPalette.push_back(BrightNeonHallCol);  // 2
+
+    m_italybackgroundTexture = LoadTexture("Images/italy.jpg", ItalyCol);
+    //std::cout << "Scary Color: R=" << ScaryCol.r << ", G=" << ScaryCol.g << ", B=" << ScaryCol.b << std::endl;
+    ColorPalette.push_back(ItalyCol);  // 3
+
+    m_bathsbackgroundTexture = LoadTexture("Images/baths.jpg", BathsCol);
+    //std::cout << "Scary Color: R=" << ScaryCol.r << ", G=" << ScaryCol.g << ", B=" << ScaryCol.b << std::endl;
+    ColorPalette.push_back(BathsCol);  // 4
 
 
     // Set the default BG and Portal BG
@@ -363,7 +394,10 @@ GLuint ParticlesApplication::LoadTexture(const char* filename, glm::vec3& SceneC
         return 0;
     }
 
-    // Calculate the colours
+    std::cout << "Texture: " << filename << " loaded. Width: " << width << ", Height: " << height << ", Channels: " << nrChannels << std::endl;
+
+
+
     int pixelCount = width * height;
     if (nrChannels == 3 || nrChannels == 4)
     {
@@ -377,16 +411,29 @@ GLuint ParticlesApplication::LoadTexture(const char* filename, glm::vec3& SceneC
         SceneCol /= static_cast<float>(pixelCount * 255.0f);
     }
 
-    std::cout << "Average Color: R=" << SceneCol.r << ", G=" << SceneCol.g << ", B=" << SceneCol.b << std::endl;
+    //std::cout << "Average Color: R=" << SceneCol.r << ", G=" << SceneCol.g << ", B=" << SceneCol.b << std::endl;
 
     GLuint textureID;
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_2D, textureID);
 
-    if (nrChannels == 3)
+    size_t textureSize = width * height * nrChannels * sizeof(unsigned char);
+    size_t numberOfPixels = textureSize / nrChannels;
+
+
+
+
+    if (nrChannels == 3) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-    else if (nrChannels == 4)
+    }
+    else if (nrChannels == 4) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+    }
+    else {
+        std::cerr << "Unsupported number of channels: " << nrChannels << std::endl;
+    }
+
 
     glGenerateMipmap(GL_TEXTURE_2D);
 
@@ -394,6 +441,7 @@ GLuint ParticlesApplication::LoadTexture(const char* filename, glm::vec3& SceneC
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
 
     stbi_image_free(data);
     return textureID;
@@ -409,7 +457,10 @@ void ParticlesApplication::RenderBackground()
     if (bg_type == "room") {
         currentBackground = m_backgroundTexture;
     }
-    else if (bg_type == "") {
+    else if (bg_type == "neonhall") {
+        currentBackground = m_neonHallbackgroundTexture;
+    }
+    else if (bg_type == "scary") {
         currentBackground = m_scarybackgroundTexture;
     }
     else {
@@ -455,7 +506,7 @@ void ParticlesApplication::RenderBackground()
     }
 
     // Bind the texture
-    glBindTexture(GL_TEXTURE_2D, m_backgroundTexture);
+    glBindTexture(GL_TEXTURE_2D, currentBackground);
     m_backgroundShaderProgram.Use();
 
     glBindVertexArray(quadVAO);
@@ -473,23 +524,28 @@ void ParticlesApplication::RenderPortalBackground()
 
     if (portal_type == "forest") {
         currentPortalBackground = m_forestbackgroundTexture;
-        //CurrentCol = ForestCol;
     }
-    else if (portal_type == "scary") {
-        currentPortalBackground = m_scarybackgroundTexture;
-        //CurrentCol = ScaryCol;
+    else if (portal_type == "brightneon") {
+        currentPortalBackground = m_brightNeonbackgroundTexture;
+    }
+    else if (portal_type == "italy") {
+        currentPortalBackground = m_italybackgroundTexture;
+    }
+    else if (portal_type == "baths") {
+        currentPortalBackground = m_bathsbackgroundTexture;
     }
     else {
         currentPortalBackground = m_forestbackgroundTexture; // Safe in case value is missing
-        //CurrentCol = ForestCol;
     }
+
+    
 
     // Render smaller image to create a better looking portal image
     static const float quadVertices[] = {
-        -0.8f,  0.8f,  0.0f, 1.0f, 
-        -0.8f, -0.8f,  0.0f, 0.0f,  
-         0.8f, -0.8f,  1.0f, 0.0f,  
-         0.8f,  0.8f,  1.0f, 1.0f   
+        -1.0f,  1.0f,  0.0f, 1.0f,
+        -1.0f, -1.0f,  0.0f, 0.0f,
+         1.0f, -1.0f,  1.0f, 0.0f,
+         1.0f,  1.0f,  1.0f, 1.0f,
     };
 
     static const unsigned int quadIndices[] = {

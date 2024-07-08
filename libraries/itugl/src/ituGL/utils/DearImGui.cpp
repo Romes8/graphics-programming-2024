@@ -59,12 +59,28 @@ std::string DearImGui::Portal(std::vector<glm::vec3> ColPalette, glm::vec3& col)
        return portal_type;
     }
      
-    if (ImGui::Button("Scary"))
+    if (ImGui::Button("Bright Neon"))
     {
-        portal_type = "scary";
-        std::cout << "Scary chosen" << std::endl;
+        portal_type = "brightneon";
+        std::cout << "Bright Neon chosen" << std::endl;
         col = ColPalette[2];
        return portal_type;
+    }
+
+    if (ImGui::Button("Italy"))
+    {
+        portal_type = "italy";
+        std::cout << "Italy chosen" << std::endl;
+        col = ColPalette[3];
+        return portal_type;
+    }
+
+    if (ImGui::Button("Baths"))
+    {
+        portal_type = "baths";
+        std::cout << "Baths chosen" << std::endl;
+        col = ColPalette[4];
+        return portal_type;
     }
   
    return portal_type;
@@ -75,8 +91,22 @@ std::string DearImGui::MainBG() {
 
     if (ImGui::Button("Room"))
     {
-        bg_type = "forest";
+        bg_type = "room";
         std::cout << "Room chosen" << std::endl;
+        return bg_type;
+    }
+
+    if (ImGui::Button("Neon"))
+    {
+        bg_type = "neonhall";
+        std::cout << "Neon hall chosen" << std::endl;
+        return bg_type;
+    }
+
+    if (ImGui::Button("Scary"))
+    {
+        bg_type = "scary";
+        std::cout << "Scary chosen" << std::endl;
         return bg_type;
     }
 
