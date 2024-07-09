@@ -160,6 +160,13 @@ void ParticlesApplication::Update()
     float radius = CIRCLE_RADIUS;   // Radius of the circle
     float angularSpeed = glm::radians(120.0f); // Angular speed in radians
 
+    float windowAspectRatio = static_cast<float>(width) / static_cast<float>(height);
+
+    float scale = 1.0f;
+    if (windowAspectRatio > 1.0f)
+    {
+        scale = 1.0f / windowAspectRatio;
+    }
 
     // Calculate angular speed
     static float elapsedTime = 0.0f;
@@ -170,12 +177,12 @@ void ParticlesApplication::Update()
     for (int i = 0; i < numParticles; ++i)
     {
         float angle = glm::radians((360.0f / numParticles) * i) + rotationAngle;
-        glm::vec2 position = center + radius * glm::vec2(cos(angle), sin(angle));
+        glm::vec2 position = center + radius * glm::vec2(cos(angle) * scale, sin(angle));
         float size = RandomRange(10.0f, 30.0f);
         float duration = RandomRange(0.5f, 0.9f);
         Color color = RandomColor();
         float velocityMagnitude = RandomRange(0.5f, 1.0f);
-        glm::vec2 velocityDirection = glm::vec2(std::cos(angle + glm::radians(90.0f)), std::sin(angle + glm::radians(90.0f)));
+        glm::vec2 velocityDirection = glm::vec2(std::cos(angle + glm::radians(90.0f)) * scale, std::sin(angle + glm::radians(90.0f)));
         glm::vec2 velocity = velocityDirection * velocityMagnitude;
 
         EmitParticle(position, size, duration, color, velocity);
@@ -417,12 +424,6 @@ GLuint ParticlesApplication::LoadTexture(const char* filename, glm::vec3& SceneC
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_2D, textureID);
 
-    size_t textureSize = width * height * nrChannels * sizeof(unsigned char);
-    size_t numberOfPixels = textureSize / nrChannels;
-
-
-
-
     if (nrChannels == 3) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
     }
@@ -594,6 +595,17 @@ void ParticlesApplication::StencilCircle() {
     const float centerX = 0.0f;   
     const float centerY = 0.0f;
 
+    int windowWidth, windowHeight;
+    GetMainWindow().GetDimensions(windowWidth, windowHeight);
+
+    float windowAspectRatio = static_cast<float>(windowWidth) / static_cast<float>(windowHeight);
+
+    float scale = 1.0f;
+    if (windowAspectRatio > 1.0f)
+    {
+        scale = 1.0f / windowAspectRatio;
+    }
+
     std::vector<float> vertices;
     vertices.push_back(centerX);
     vertices.push_back(centerY);
@@ -601,7 +613,7 @@ void ParticlesApplication::StencilCircle() {
     for (int i = 0; i <= num_segments; ++i)
     {
         float angle = 2.0f * 3.14 * float(i) / float(num_segments);
-        float x = radius * cosf(angle);
+        float x = radius * cosf(angle) * scale;
         float y = radius * sinf(angle);
         vertices.push_back(x + centerX);
         vertices.push_back(y + centerY);
