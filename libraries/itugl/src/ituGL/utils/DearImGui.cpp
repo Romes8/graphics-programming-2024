@@ -47,7 +47,12 @@ void DearImGui::BeginFrame()
     ImGui::NewFrame();
 }
 
-std::string DearImGui::Portal(std::vector<glm::vec3> ColPalette, glm::vec3& col) {
+std::string DearImGui::Portal(std::vector<glm::vec3> ColPalette, glm::vec3& col, bool& zoom) {
+
+    // Zoom effect
+    ImGui::Checkbox("Zoom effect", &zoom);
+
+
     ImGui::Text("Choose a portal:");
 
     if (ImGui::Button("Forest"))
@@ -82,6 +87,7 @@ std::string DearImGui::Portal(std::vector<glm::vec3> ColPalette, glm::vec3& col)
         col = ColPalette[4];
         return portal_type;
     }
+
   
    return portal_type;
 }

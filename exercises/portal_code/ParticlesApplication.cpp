@@ -17,6 +17,8 @@
 const float CIRCLE_RADIUS = 0.4f;
 std::string portal_type = "";
 std::string bg_type = "";
+bool zoom_effect = true;
+float scaleFactor;
 
 int width, height;
 glm::vec3 averageColor;
@@ -235,7 +237,7 @@ void ParticlesApplication::Render()
 
     // UI section
     m_imgui.BeginFrame();
-    portal_type = m_imgui.Portal(ColorPalette, CurrentCol);
+    portal_type = m_imgui.Portal(ColorPalette, CurrentCol, zoom_effect);
     bg_type = m_imgui.MainBG();
     m_imgui.PortalCol(CurrentCol); // Colour change in the UI
 
@@ -519,7 +521,6 @@ void ParticlesApplication::RenderBackground()
 
 void ParticlesApplication::RenderPortalBackground()
 {
-
     // Default value is Forest
     GLuint last_value = currentPortalBackground;
 
@@ -539,16 +540,7 @@ void ParticlesApplication::RenderPortalBackground()
         currentPortalBackground = m_forestbackgroundTexture; // Safe in case value is missing
     }
 
-    
-
-    // Render smaller image to create a better looking portal image
-    static const float quadVertices[] = {
-        -1.0f,  1.0f,  0.0f, 1.0f,
-        -1.0f, -1.0f,  0.0f, 0.0f,
-         1.0f, -1.0f,  1.0f, 0.0f,
-         1.0f,  1.0f,  1.0f, 1.0f,
-    };
-
+    // Quad vertex and index data
     static const unsigned int quadIndices[] = {
         0, 1, 2,
         2, 3, 0
@@ -564,8 +556,10 @@ void ParticlesApplication::RenderPortalBackground()
         glGenBuffers(1, &quadEBO);
 
         glBindVertexArray(quadVAO);
+
+        // Define vertices and texture coordinates for the quad
         glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * 4, nullptr, GL_DYNAMIC_DRAW);
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quadEBO);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(quadIndices), quadIndices, GL_STATIC_DRAW);
@@ -577,7 +571,32 @@ void ParticlesApplication::RenderPortalBackground()
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 
         glBindVertexArray(0);
+
+        // Set texture parameters
+        glBindTexture(GL_TEXTURE_2D, currentPortalBackground);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glBindTexture(GL_TEXTURE_2D, 0);
     }
+
+    if (zoom_effect) {
+        float timeValue = glfwGetTime();
+        scaleFactor = 1.0f + 0.1f * std::sin(timeValue * 0.8f);
+    }
+    else {
+        scaleFactor = 1.0f;
+    }
+
+    float scaledQuadVertices[] = {
+        -0.5f * scaleFactor,  0.5f * scaleFactor,  0.0f, 1.0f, // Top-left
+        -0.5f * scaleFactor, -0.5f * scaleFactor,  0.0f, 0.0f, // Bottom-left
+         0.5f * scaleFactor, -0.5f * scaleFactor,  1.0f, 0.0f, // Bottom-right
+         0.5f * scaleFactor,  0.5f * scaleFactor,  1.0f, 1.0f  // Top-right
+    };
+
+    // Update vertex data
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(scaledQuadVertices), scaledQuadVertices);
 
     // Portal change 
     glBindTexture(GL_TEXTURE_2D, currentPortalBackground);
@@ -590,14 +609,14 @@ void ParticlesApplication::RenderPortalBackground()
 }
 
 void ParticlesApplication::StencilCircle() {
-    const int num_segments = 100; // Number of segments for circle
+    const int num_segments = 200; // Number of segments for circle
     const float radius = CIRCLE_RADIUS; // Radius of the circle
     const float centerX = 0.0f;   
     const float centerY = 0.0f;
 
     int windowWidth, windowHeight;
     GetMainWindow().GetDimensions(windowWidth, windowHeight);
-
+    
     float windowAspectRatio = static_cast<float>(windowWidth) / static_cast<float>(windowHeight);
 
     float scale = 1.0f;

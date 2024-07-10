@@ -27,7 +27,7 @@ public:
 
     void Initialize(::Window& window);
     void Cleanup();
-    std::string Portal(std::vector<glm::vec3> ColPalette, glm::vec3& col);
+    std::string Portal(std::vector<glm::vec3> ColPalette, glm::vec3& col,bool& zoom);
     std::string MainBG();
     void PortalCol(glm::vec3& col);
 
